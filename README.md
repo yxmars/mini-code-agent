@@ -1,94 +1,94 @@
 # codeagent
 
-A minimal but complete code agent for the terminal, inspired by Claude Code's core design. Supports DeepSeek, OpenAI, Groq, and Ollama via a unified OpenAI-compatible interface.
+一个轻量但完整的终端代码 Agent，灵感来源于 Claude Code 的核心设计。通过统一的 OpenAI 兼容接口支持 DeepSeek、OpenAI、Groq 和 Ollama。
 
-## Features
+## 功能特性
 
-- **REPL interaction** with readline history and Ctrl-C/D handling
-- **Agentic tool loop**: the model calls tools, observes results, and iterates until done
-- **Streaming output** with real-time Markdown rendering
-- **Permission management**: dangerous tools require `y/n/always` confirmation
-- **Diff previews** before any file write or edit
-- **Context compaction**: automatic summarization when token usage exceeds 75% of max
-- **Session persistence**: save/resume conversations across terminal sessions
-- **Memory injection**: global and project-level `MEMORY.md` files injected into system prompt
-- **Multi-provider**: DeepSeek, OpenAI, Groq, Ollama
+- **REPL 交互**：支持 readline 历史记录及 Ctrl-C/D 处理
+- **工具调用循环**：模型调用工具、观察结果并迭代，直到任务完成
+- **流式输出**：实时 Markdown 渲染
+- **权限管理**：危险工具需要 `y/n/always` 确认
+- **差异预览**：任何文件写入或编辑前展示 diff
+- **上下文压缩**：当 token 用量超过最大值的 75% 时自动摘要
+- **会话持久化**：跨终端会话保存/恢复对话
+- **记忆注入**：全局和项目级 `MEMORY.md` 文件自动注入系统提示词
+- **多模型提供商**：DeepSeek、OpenAI、Groq、Ollama
 
-## Installation
+## 安装
 
 ```bash
-# From the agent_demo directory:
+# 在 agent_demo 目录下执行：
 pip install -e .
 
-# With dev dependencies (for tests):
+# 安装开发依赖（用于测试）：
 pip install -e ".[dev]"
 ```
 
-## Quick Start
+## 快速开始
 
 ```bash
-# Set your API key
+# 设置 API 密钥
 export DEEPSEEK_API_KEY="sk-..."
 
-# Start interactive REPL
+# 启动交互式 REPL
 codeagent
 
-# Single-shot non-interactive mode
+# 单次非交互模式
 codeagent -p "写一个冒泡排序的 Python 实现并测试它"
 
-# Use a different provider
+# 使用其他提供商
 codeagent --provider openai --model gpt-4o
 
-# Auto-approve all tools (use with care)
+# 自动批准所有工具（谨慎使用）
 codeagent -p "创建 hello.py 并运行它" -y
 ```
 
-## Providers
+## 支持的提供商
 
-| Provider | Environment Variable | Default Model |
+| 提供商 | 环境变量 | 默认模型 |
 |---|---|---|
-| `deepseek` (default) | `DEEPSEEK_API_KEY` | `deepseek-chat` |
+| `deepseek`（默认）| `DEEPSEEK_API_KEY` | `deepseek-chat` |
 | `openai` | `OPENAI_API_KEY` | `gpt-4o` |
 | `groq` | `GROQ_API_KEY` | `llama-3.3-70b-versatile` |
-| `ollama` | _(none)_ | `llama3.2` |
+| `ollama` | _（无需密钥）_ | `llama3.2` |
 
-## REPL Commands
+## REPL 命令
 
-| Command | Description |
+| 命令 | 说明 |
 |---|---|
-| `/help` | Show all commands |
-| `/clear` | Reset conversation, keep system prompt |
-| `/model [name]` | Show or switch model |
-| `/cost` | Token usage and cost estimate |
-| `/save` | Save session to disk |
-| `/resume [id]` | Resume a previous session |
-| `/sessions` | List recent sessions |
-| `/memory` | Show injected memory content |
-| `/run "<task>"` | Autonomous mode: auto-approve all tools |
-| `/exit` `/quit` | Exit |
+| `/help` | 显示所有命令 |
+| `/clear` | 重置对话，保留系统提示词 |
+| `/model [名称]` | 查看或切换模型 |
+| `/cost` | 查看 token 用量和费用估算 |
+| `/save` | 将会话保存到磁盘 |
+| `/resume [id]` | 恢复之前的会话 |
+| `/sessions` | 列出最近的会话 |
+| `/memory` | 显示已注入的记忆内容 |
+| `/run "<任务>"` | 自主模式：自动批准所有工具 |
+| `/exit` `/quit` | 退出 |
 
-## Tools
+## 工具列表
 
-| Tool | Type | Description |
+| 工具 | 类型 | 说明 |
 |---|---|---|
-| `read_file` | Safe | Read file with line numbers, offset, limit |
-| `write_file` | Destructive | Write file, create parent dirs, show diff |
-| `edit_file` | Destructive | Unique-string replacement with diff preview |
-| `bash` | Destructive | Run shell command, capture stdout+stderr |
-| `glob_tool` | Safe | Find files by glob pattern |
-| `grep_tool` | Safe | Regex search with context lines |
-| `web_fetch` | Safe | Fetch URL, convert HTML to Markdown |
-| `web_search` | Safe | DuckDuckGo search, no API key required |
+| `read_file` | 安全 | 读取文件，支持行号、偏移量、限制行数 |
+| `write_file` | 危险 | 写入文件，自动创建父目录，展示 diff |
+| `edit_file` | 危险 | 唯一字符串替换，带 diff 预览 |
+| `bash` | 危险 | 执行 shell 命令，捕获 stdout+stderr |
+| `glob_tool` | 安全 | 通过 glob 模式查找文件 |
+| `grep_tool` | 安全 | 正则搜索，支持上下文行 |
+| `web_fetch` | 安全 | 抓取 URL，将 HTML 转换为 Markdown |
+| `web_search` | 安全 | DuckDuckGo 搜索，无需 API 密钥 |
 
-## Configuration
+## 配置
 
-Three-layer configuration merge (lowest to highest priority):
+三层配置合并（优先级从低到高）：
 
-1. `~/.config/codeagent/config.json` — user defaults
-2. `.codeagent/config.json` — project overrides
-3. Environment variables — highest priority
+1. `~/.config/codeagent/config.json` — 用户默认配置
+2. `.codeagent/config.json` — 项目级覆盖配置
+3. 环境变量 — 最高优先级
 
-Example `config.json`:
+`config.json` 示例：
 ```json
 {
   "provider": "deepseek",
@@ -97,46 +97,42 @@ Example `config.json`:
 }
 ```
 
-### Custom System Prompt
+### 自定义系统提示词
 
-Place a `CODEAGENT.md` in your project root — it will be appended to the system prompt automatically.
+在项目根目录放置 `CODEAGENT.md`，其内容将自动追加到系统提示词中。
 
-### Memory Files
+### 记忆文件
 
-- `~/.config/codeagent/MEMORY.md` — global memory (e.g., coding style preferences)
-- `.codeagent/MEMORY.md` — project-level memory
+- `~/.config/codeagent/MEMORY.md` — 全局记忆（如编码风格偏好）
+- `.codeagent/MEMORY.md` — 项目级记忆
 
-Both are injected into the system prompt at startup.
+两个文件均在启动时注入到系统提示词中。
 
-## Running Tests
+## 运行测试
 
 ```bash
-# Unit tests (no API key required, fast)
+# 单元测试（无需 API 密钥，速度快）
 pytest tests/ -m "not e2e" -v
 
-# End-to-end tests (requires DEEPSEEK_API_KEY)
+# 端到端测试（需要 DEEPSEEK_API_KEY）
 export DEEPSEEK_API_KEY="sk-..."
 pytest tests/test_e2e.py -m e2e -v --timeout=120
 ```
 
-## Project Structure
+## 项目结构
 
 ```
 codeagent/
-├── __init__.py      # version
-├── main.py          # CLI entry point, REPL loop, slash commands
-├── agent.py         # Agent loop, streaming, tool dispatch, permission gate
-├── tools.py         # 8 tool implementations + TOOL_REGISTRY
-├── providers.py     # Multi-provider client factory + tool JSON schemas
-├── config.py        # Configuration loading, AgentConfig dataclass
-└── memory.py        # Context compaction, session persistence, memory files
+├── __init__.py      # 版本信息
+├── main.py          # CLI 入口，REPL 循环，斜杠命令
+├── agent.py         # Agent 循环、流式输出、工具调度、权限管理
+├── tools.py         # 8 个工具实现 + TOOL_REGISTRY
+├── providers.py     # 多提供商客户端工厂 + 工具 JSON Schema
+├── config.py        # 配置加载，AgentConfig 数据类
+└── memory.py        # 上下文压缩、会话持久化、记忆文件
 ```
 
-## Known Limitations
+## 已知限制
 
-- **DeepSeek content filter**: web page content fetched via `web_fetch` / `web_search`
-  may trigger DeepSeek's `Content Exists Risk` filter. The agent handles this automatically
-  by stripping web tool results and retrying. Use `/clear` if the session gets stuck.
-- `web_search` uses the DuckDuckGo Instant Answer API which may return limited results
-  for some queries. For richer results, configure a provider with better web access.
-# mini-code-agent
+- **DeepSeek 内容过滤**：通过 `web_fetch` / `web_search` 获取的网页内容可能触发 DeepSeek 的 `Content Exists Risk` 过滤器。Agent 会自动处理——剥离网页工具结果后重试。如果会话卡住，请使用 `/clear`。
+- `web_search` 使用 DuckDuckGo Instant Answer API，对某些查询可能返回有限结果。如需更丰富的结果，请配置支持更好网络访问的提供商。
