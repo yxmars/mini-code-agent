@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codeagent"
+version = "0.1.0"
+description = "Minimal viable code agent — CLI-first, multi-provider"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.0",
+    "rich>=13.0",
+    "prompt_toolkit>=3.0",
+    "requests>=2.31",
+    "html2text>=2024.2.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-timeout"]
+
+[project.scripts]
+codeagent = "codeagent.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["codeagent*"]
+
+[tool.pytest.ini_options]
+markers = ["e2e: end-to-end tests requiring a real API key"]

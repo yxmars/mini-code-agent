@@ -1,0 +1,2 @@
+[console_scripts]
+codeagent = codeagent.main:main

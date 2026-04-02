@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: codeagent
+Version: 0.1.0
+Summary: Minimal viable code agent — CLI-first, multi-provider
+Requires-Python: >=3.10
+Requires-Dist: openai>=1.0
+Requires-Dist: rich>=13.0
+Requires-Dist: prompt_toolkit>=3.0
+Requires-Dist: requests>=2.31
+Requires-Dist: html2text>=2024.2.26
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: pytest-timeout; extra == "dev"
