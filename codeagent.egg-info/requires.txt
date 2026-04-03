@@ -1,9 +1,0 @@
-openai>=1.0
-rich>=13.0
-prompt_toolkit>=3.0
-requests>=2.31
-html2text>=2024.2.26
-
-[dev]
-pytest>=8.0
-pytest-timeout
