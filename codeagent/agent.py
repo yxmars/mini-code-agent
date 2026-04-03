@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any
 
 import openai
@@ -41,6 +42,11 @@ class Agent:
         Stream a response from the model.
         Returns (assistant_message, tool_calls_list).
         """
+        t0 = time.monotonic()
+        request_messages_snapshot = [m.copy() for m in self.messages]
+        prev_prompt = self.config.total_prompt_tokens
+        prev_completion = self.config.total_completion_tokens
+
         tool_calls_accumulator: dict[int, dict] = {}
         text_parts: list[str] = []
 
@@ -123,6 +129,22 @@ class Agent:
             assistant_message["content"] = None
         if tool_calls_list:
             assistant_message["tool_calls"] = tool_calls_list
+
+        if self.config.log_enabled:
+            from codeagent.logger import write_llm_log  # noqa: PLC0415
+            from codeagent.providers import get_tool_schemas as _get_schemas  # noqa: PLC0415
+            write_llm_log(
+                call_type="chat",
+                provider=self.config.provider,
+                model=self.config.model,
+                request_messages=request_messages_snapshot,
+                request_tools=_get_schemas(),
+                response_message=assistant_message,
+                prompt_tokens=self.config.total_prompt_tokens - prev_prompt,
+                completion_tokens=self.config.total_completion_tokens - prev_completion,
+                elapsed_ms=int((time.monotonic() - t0) * 1000),
+                log_dir=self.config.log_dir,
+            )
 
         return assistant_message, tool_calls_list
 
@@ -284,10 +306,27 @@ class Agent:
         total = self.config.total_prompt_tokens + self.config.total_completion_tokens
         if memory.should_compact(self.messages, total, self.config.max_tokens):
             self.console.print("[dim]Compacting context...[/dim]")
+            t0 = time.monotonic()
+            compact_input_snapshot = [m.copy() for m in self.messages]
             new_msgs, summary = memory.compact_messages(
                 self.client, self.config.model,
                 self.messages, self.config.system_prompt,
             )
+            elapsed_ms = int((time.monotonic() - t0) * 1000)
+            if self.config.log_enabled:
+                from codeagent.logger import write_llm_log  # noqa: PLC0415
+                write_llm_log(
+                    call_type="compact",
+                    provider=self.config.provider,
+                    model=self.config.model,
+                    request_messages=compact_input_snapshot,
+                    request_tools=None,
+                    response_message={"role": "assistant", "content": summary},
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    elapsed_ms=elapsed_ms,
+                    log_dir=self.config.log_dir,
+                )
             old_count = total
             self.messages = new_msgs
             self.config.total_prompt_tokens = 0

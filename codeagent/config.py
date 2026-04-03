@@ -50,6 +50,8 @@ class AgentConfig:
     always_allow: set[str] = field(default_factory=set)
     total_prompt_tokens: int = 0
     total_completion_tokens: int = 0
+    log_enabled: bool = True
+    log_dir: str | None = None
 
 
 def _read_json(path: Path) -> dict:
@@ -115,5 +117,16 @@ def load_config() -> AgentConfig:
             cfg.system_prompt = f"{cfg.system_prompt}\n\n---\n[Memory]\n{memory_content}"
     except Exception:
         pass
+
+    # Log settings (env vars override config files)
+    if os.environ.get("CODEAGENT_LOG", "").lower() in ("1", "true", "yes"):
+        cfg.log_enabled = True
+    elif str(merged.get("log_enabled", "")).lower() in ("1", "true", "yes"):
+        cfg.log_enabled = True
+
+    if os.environ.get("CODEAGENT_LOG_DIR"):
+        cfg.log_dir = os.environ["CODEAGENT_LOG_DIR"]
+    elif merged.get("log_dir"):
+        cfg.log_dir = str(merged["log_dir"])
 
     return cfg
